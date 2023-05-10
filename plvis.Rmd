@@ -1,0 +1,374 @@
+---
+title: "2021-2022 Premier League Visiualizations"
+description: 
+output:
+  distill::distill_article:
+    theme: flatly
+---
+<style>
+
+  .distill-site-header{ 
+    padding: 10px 0;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background-color: rgba(86, 109, 164, 0.85);
+    box-shadow: 0px 2px 4px rgba(86, 109, 164, 0.7);
+    color: black;
+  }
+
+
+  
+  /* Footer */
+  footer {
+    text-align: center;
+    font-size: 0.8em;
+    margin-top: 2rem;
+  }
+  
+  /* Background */
+  body {
+    background: linear-gradient(to bottom, #608bbd, #acc2dc);
+  }
+
+</style>
+Using individual statistical data for all Premier League players of the 21-22 season, we want to award "player of the season award" to the player who contributed most in their team's success. 
+
+In football, the most direct contributions to a squad's success are scoring goals and providing assists for teammates. So we begin by identifying the top 10 players who made the highest contributions in terms of both goals scored and assists provided.
+
+Goals and assists are fundamental metrics that demonstrate a player's impact on the team's overall performance. Scoring goals showcases a player's ability to find the back of the net and directly contribute to their team's offensive output. Assists, on the other hand, demonstrate a player's vision, playmaking skills, and ability to set up their teammates for goal-scoring opportunities.
+
+By identifying the top 10 players with the highest combined goals and assists, we can highlight those who have been particularly influential in their teams' successes
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+players_data = read.csv("PL21_22_playersdata.csv")
+
+attach(players_data)
+
+top_10_contr <- players_data[order(players_data$G.A, decreasing = TRUE),][1:10,]
+
+ggplot(top_10_contr, aes(x = reorder(Player, G.A), y = G.A, fill = Squad)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Top 10 Contributers (Goals + Assists) in Premier League 21-22 Season", x = "Player Name", y = "Number of Goals + Assists", fill = "Team Name") +
+   theme(plot.background = element_rect(fill = "transparent")) +
+    theme(plot.background = element_rect(fill = "#7d9ec9")) 
+```
+
+So now that we have a list of the top contributes, we want to dive deeper into their performances. In the next chart, we plot the relationship between number of goals scored and expected goals. This plot is a valuable tool for analyzing a player's finishing ability and efficiency in converting scoring opportunities. Expected goals (xG) is a statistical metric that estimates the probability of a shot resulting in a goal based on various factors such as shot location, shot type, defensive pressure, and other contextual variables.
+
+The plot helps us understand how well a player has performed in relation to the quality of the chances they have had. By comparing the actual number of goals scored by a player with their expected goals, we can gain insights into their ability to outperform or underperform the statistical expectations.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Subset the players_data dataframe to include only relevant columns for this graph
+player_stats <- top_10_contr[, c("Player", "Gls", "xG", "Min")]
+
+# Create the plot
+ggplot(player_stats, aes(x = Gls, y = xG, size = Min)) +
+  geom_point(alpha = 0.1) + 
+  scale_size_continuous(range = c(5, 15)) +
+  geom_text(aes(label = Player), hjust = 0.5, vjust = 0, size = 3, angle = 45) +
+  theme_classic() +
+  labs(title = "Goals vs Expected Goals sized by Number of minutes played", x = "Number of Goals", y = "Expected Goals") +
+  expand_limits(x = c(8, max(player_stats$Gls) + 5), y = c(0, max(player_stats$xG) + 5)) +
+    theme(plot.background = element_rect(fill = "#7d9ec9")) 
+```
+
+<p>From this plot, we can start noticing some differences between the players, however, it still not quite straight forward figuring out which of the players has performed better and more consistently. The two players that clearly stand out in this plot are Mohamed Salah and Son Heung-min. They were co-winners of the golden boot (top scorer) of the league and they both have met or exceded their expected goals ratio while maintaining a similar total minutes played close to each other and to almost all other players in the lists. For these reasons Salah and Son are players that definitely stood out this season. 
+There is one other player that stands out from this graph, but it is not immediately obvious why and that is Kevin De Bruyne. Despite him being on the lower end of the total number of goals, it is worth mentioning that he is one of only 3 midfielders on this entire list and he is the highest scoring among all 3 of them. -It is often easier for a forward player to score more goals than a midfielder.- Furthermore, Kevin has a much higher total number of goals than expected goals meaning that he outperformed his statistical chances. Furthermore, all of this is coupled with the fact that he played the least amount of minutes in comparison to the rest of the top performers list puts him in a great position to be a contestant for the player of the season award. </p>
+
+The next plot shows the number of progressive carries vs number of progressive passes receive while size is keyed by the expected assists. This plot provides insights into a player's involvement in progressing the ball and creating goal-scoring opportunities for their team. Progressive carries refer to instances where a player advances the ball forward by carrying it into the opponent's territory. Progressive passes received, on the other hand, represent the number of passes a player receives that advance the ball significantly up the field.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+# Subset the players_data dataframe to include only relevant columns for this graph
+player_stats <- top_10_contr[, c("Player", "PrgC", "PrgR", "xAG")]
+
+# Create the plot
+ggplot(player_stats, aes(x = PrgC, y = PrgR, size = xAG)) +
+  geom_point(alpha = 0.1) + 
+  scale_size_continuous(range = c(5, 15)) +
+  geom_text(aes(label = Player), hjust = 0.5, vjust = 1, size = 3, angle = -45) +
+  theme_classic() +
+  labs(title = "Progressive Carries vs Progressive Passes Received sized by total number of minutes played", x = "Number of Progressive Carries", y = "Number of Progressive Passes Received") +
+  expand_limits(x = c(30, max(player_stats$PrgC) + 20), y = c(100, max(player_stats$PrgR) + 20)) +
+  theme(plot.background = element_rect(fill = "#8dabcf"))
+
+```
+Once again, we can clearly see Mohamed Salah and Son Heung-min at the edges of the plot proving our initial assertion that these two players had one of the biggest individual contributions to their team's success this season. So, both of these players make it to my top 3 list. Kevin De Bruyne might not again stand out right away from this graph, but this is again because he is a midfielder and thus does not receive as much progressive passes as forward players, however, we can once again see that Kevin has the largest expected assists which means that he outperforms his  statistical chances. Therefore, I chose Kevin De Bruyne as the the third finalist in my award choice. 
+
+
+From these previous plots, we narrowed down the top 3 players for our player of the season award to be: Mohamed Salah, Son Heung-min, and Kevin De Bruyne. We now create radar charts for each of the 3 players in order to compare their individual performances and see which has a more balanced contribution to their squad. Radar charts are very commonly used in football to explore the players overall strength and weakness because if the right variables are chose, it is becomes really easy to visualize a players total performance simply by noticing the are the radar chart expands. 
+
+Here are the 6 variables I chose for my radar charts. 
+1. Goals: This again is the fundamental measurement in the game. It directly measures a player's ability to find the back of the net and contribute to their team's offensive output. Goals highlight a player's finishing ability, positioning, movement, and decision-making in the final third.
+2. Assists: Assists measure the number of goal-scoring opportunities a player has created for their teammates through their passes or crosses. It reflects a player's vision, playmaking skills, and ability to set up their teammates for goals.
+3. Successful Dribbles: This variable indicates a player's ability to take on opponents and successfully navigate through tight spaces. It reflects a player's agility, technique, and decision-making when carrying the ball forward.
+4. Tackles Won: Tackles won highlights a player's defensive contribution by measuring their ability to dispossess opponents and regain possession for their team. It reflects a player's tackling accuracy and timing.
+5. Interceptions: This variable represents a player's ability to read the game and anticipate opposition passes, intercepting them to regain possession. It reflects a player's positioning, anticipation, and tactical awareness.
+6. Progressive Passes: Progressive passes measure a player's ability to move the ball forward effectively, bypassing opponents and contributing to their team's attacking play. It reflects a player's vision, passing accuracy, and ability to create opportunities.
+
+By considering these six variables, you can gain insights into both the attacking and defensive contributions of the players.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(fmsb)
+
+Mo_data <- subset(players_data, Player == "Mohamed Salah", select = c("Gls", "Ast", "DrbSucc", "TklW", "Int", "PrgC"))
+
+# Extract maximum values, ignoring NA
+max_values <- c(max(players_data$Gls, na.rm = TRUE), max(players_data$Ast, na.rm = TRUE), max(players_data$DrbSucc, na.rm = TRUE), max(players_data$TklW, na.rm = TRUE), max(players_data$Int, na.rm = TRUE), max(players_data$PrgC, na.rm = TRUE))
+
+# Extract minimum values, ignoring NA
+min_values <- c(0, 0, 0, 0, 0, 0)
+
+Mo_radar_data <- rbind(max_values, min_values, Mo_data)
+
+# Set labels
+labels <- c("Goals", "Assists", "Successful Dribbles", "Tackles Won", "Interceptions", "Progressive Carries")
+
+# Set title
+title <- "Mohamed Salah Performance Radar Chart"
+
+# Set color and transparency
+color <- "red"
+
+par(bg = "#9fb8d7")
+
+# Plot the radar chart
+radarchart(Mo_radar_data,
+           axistype = 1,
+           pcol = color,
+           pfcol = scales::alpha(color, 0.4),
+           plwd = 2,
+           plty = 1,
+           vlabels = labels,
+           title = title,
+           cglcol = "black",
+           cglty = 1, 
+           cglwd = 0.8,
+           caxislabels = c("", "", "", "", ""),
+           vlcex = 0.7)
+
+
+
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(fmsb)
+
+son_data <- subset(players_data, Player == "Son Heung-min", select = c("Gls", "Ast", "DrbSucc", "TklW", "Int", "PrgC"))
+
+# Extract maximum values, ignoring NA
+max_values <- c(max(players_data$Gls, na.rm = TRUE), max(players_data$Ast, na.rm = TRUE), max(players_data$DrbSucc, na.rm = TRUE), max(players_data$TklW, na.rm = TRUE), max(players_data$Int, na.rm = TRUE), max(players_data$PrgC, na.rm = TRUE))
+
+# Extract minimum values, ignoring NA
+min_values <- c(0, 0, 0, 0, 0, 0)
+
+Son_radar_data <- rbind(max_values, min_values, son_data)
+
+# Set labels
+labels <- c("Goals", "Assists", "Successful Dribbles", "Tackles Won", "Interceptions", "Progressive Carries")
+
+# Set title
+title <- "Son Heung-min Performance Radar Chart"
+
+# Set color and transparency
+color <- "#E7B800"
+
+par(bg = "#9fb8d7")
+
+# Plot the radar chart
+radarchart(Son_radar_data,
+           axistype = 1,
+           pcol = color,
+           pfcol = scales::alpha(color, 0.6),
+           plwd = 2,
+           plty = 1,
+           vlabels = labels,
+           title = title,
+           cglcol = "black",
+           cglty = 1, 
+           cglwd = 0.8,
+           caxislabels = c("", "", "", "", ""),
+           vlcex = 0.7)
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(fmsb)
+
+kevin_data <- subset(players_data, Player == "Kevin De Bruyne", select = c("Gls", "Ast", "DrbSucc", "TklW", "Int", "PrgC"))
+
+# Extract maximum values, ignoring NA
+max_values <- c(max(players_data$Gls, na.rm = TRUE), max(players_data$Ast, na.rm = TRUE), max(players_data$DrbSucc, na.rm = TRUE), max(players_data$TklW, na.rm = TRUE), max(players_data$Int, na.rm = TRUE), max(players_data$PrgC, na.rm = TRUE))
+
+# Extract minimum values, ignoring NA
+min_values <- c(0, 0, 0, 0, 0, 0)
+
+kevin_radar_data <- rbind(max_values, min_values, kevin_data)
+
+# Set labels
+labels <- c("Goals", "Assists", "Successful Dribbles", "Tackles Won", "Interceptions", "Progressive Carries")
+
+# Set title
+title <- "Kevin De Bruyne Performance Radar Chart"
+
+# Set color and transparency
+color <- "#00AFBB"
+par(bg = "#9fb8d7")
+
+op <- par(mar = c(1, 2, 2, 1))
+# Plot the radar chart
+radarchart(kevin_radar_data,
+           axistype = 1,
+           pcol = color,
+           pfcol = scales::alpha(color, 0.6),
+           plwd = 2,
+           plty = 1,
+           vlabels = labels,
+           title = title,
+           cglcol = "black",
+           cglty = 1, 
+           cglwd = 0.8,
+           caxislabels = c("", "", "", "", ""),
+           vlcex = 0.8)
+
+```
+Now we combine all three charts for comparison. 
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(fmsb)
+
+# Extract maximum values, ignoring NA
+max_values <- c(max(players_data$Gls, na.rm = TRUE), max(players_data$Ast, na.rm = TRUE), max(players_data$DrbSucc, na.rm = TRUE), max(players_data$TklW, na.rm = TRUE), max(players_data$Int, na.rm = TRUE), max(players_data$PrgC, na.rm = TRUE))
+
+# Extract minimum values, ignoring NA
+min_values <- c(0, 0, 0, 0, 0, 0)
+
+all_radar_data <- rbind(max_values, min_values, Mo_data, son_data, kevin_data)
+
+# Set labels
+labels <- c("Goals", "Assists", "Successful Dribbles", "Tackles Won", "Interceptions", "Progressive Carries")
+
+# Set title
+title <- "Top 3 Players Performance Radar Chart"
+
+# Set color and transparency
+color <- c("red","#E7B800" ,"#00AFBB")
+
+op <- par(mar = c(1, 2, 2, 1))
+
+par(bg = "#9fb8d7")
+
+# Plot the radar chart
+radarchart(all_radar_data,
+           axistype = 1,
+           pcol = color,
+           pfcol = scales::alpha(color, 0.5),
+           plwd = 2,
+           plty = 1,
+           vlabels = labels,
+           title = title,
+           cglcol = "black",
+           cglty = 1, 
+           cglwd = 0.8,
+           caxislabels = c("", "", "", "", ""),
+           vlcex = 0.8)
+legend(
+  x = "bottom", legend = c("Mohamed Salah", "Son Heung-min", "Kevin De Bruyne"), horiz = TRUE,
+  bty = "n", pch = 20 , col = color,
+  text.col = "black", cex = 1, pt.cex = 1.5
+  )
+par(op)
+```
+From this final chart, we can see that Mohamed Salah's chart spans the most area while also being top end at the two most crucial measures both Goals and Assists compared to a compromise between Goals and Assists in his contenders stats. 
+
+In the light of this analysis, I would choose Mohamed Salah for the player of the season award in the English Premier League Season 21-22. 
+
+### Interactive Player Radar Charts
+
+Since I enjoy making and looking at radar charts a lot, I wanted to give you a chance to try it yourself to see your favorite players performance. Here you can choose any player in the PL of season 21-22 and take a look at their performance radar chart instantly. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(shiny)
+shinyApp(
+
+  ui = fluidPage(
+  titlePanel("Player Performance Radar Chart"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("player", "Select a player:", choices = players_data$Player),
+      hr(),
+      helpText("Select a player from the dropdown menu to view their radar chart.")
+    ),
+    
+    mainPanel(
+      plotOutput("radarChart")
+    )
+  )
+  ),
+
+  server = function(input, output) {
+ 
+  # Create a reactive expression for the selected player data
+  selected_player_data <- reactive({
+    subset(players_data, Player == input$player, select = c("Gls", "Ast", "DrbSucc", "TklW", "Int", "PrgC"))
+  })
+  
+  # Create a reactive expression for the radar chart data
+  radar_data <- reactive({
+    player_data <- selected_player_data()
+    max_values <- c(max(players_data$Gls, na.rm = TRUE), max(players_data$Ast, na.rm = TRUE),
+                    max(players_data$DrbSucc, na.rm = TRUE), max(players_data$TklW, na.rm = TRUE),
+                    max(players_data$Int, na.rm = TRUE), max(players_data$PrgC, na.rm = TRUE))
+    rbind(max_values, min_values, player_data)
+  })
+  
+  # Generate the radar chart
+  output$radarChart <- renderPlot({
+    radar_data <- radar_data()
+    
+    # Set labels
+    labels <- c("Goals", "Assists", "Successful Dribbles", "Tackles Won", "Interceptions", "Progressive Carries")
+    
+    # Set title
+    title <- paste(input$player, "Performance Radar Chart")
+    
+    # Set color and transparency
+    color <- "red"
+    
+    par(bg = "#9fb8d7")
+    
+    # Plot the radar chart
+    radarchart(radar_data,
+               axistype = 1,
+               pcol = color,
+               pfcol = scales::alpha(color, 0.6),
+               plwd = 2,
+               plty = 1,
+               vlabels = labels,
+               title = title,
+               cglcol = "black",
+               cglty = 1, 
+               cglwd = 0.8,
+               caxislabels = c("", "", "", "", ""),
+               vlcex = 0.7)
+  })
+  },
+
+  options = list(height = 500)
+)
+
+```
+
+
+
+
+<footer>
+  © 2023 Mohamed Bakr
+</footer>

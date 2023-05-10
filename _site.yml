@@ -1,0 +1,16 @@
+name: "mobakr_website"
+title: ""
+description: |
+  Mohamed Bakr
+output_dir: "docs"
+navbar:
+  right:
+    - text: "Home"
+      href: index.html
+    - text: "PL Visualizations"
+      href: plvis.html
+    - text: "MATH230 Visualizations"
+      href: pvis.html
+output: distill::distill_article
+runtime: shiny
+

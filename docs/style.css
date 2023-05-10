@@ -1,0 +1,13 @@
+<style>
+.distill-site-header{ 
+  padding: 40px 0px;
+  font-size: 15px;
+  font-family: "Playfair Display";
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  
+  /* background-image for fade-to-white color of navbar */
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 1), rgba(255,255,255,0.5));   
+  background-color: transparent;
+}
+</style>
